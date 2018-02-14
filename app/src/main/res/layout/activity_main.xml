@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.team2180.scouting.MainActivity">
+
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteY="-8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/teleopHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text="Teleoperated Period" />
+
+            <CheckBox
+                android:id="@+id/teleopCubes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Power-Up Cubes can be handled by Robot" />
+
+            <CheckBox
+                android:id="@+id/teleopSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Short Switch can have cubes placed in it by Robot" />
+
+            <CheckBox
+                android:id="@+id/teleopBalance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tall Balance can have cubes placed in it by Robot" />
+
+            <CheckBox
+                android:id="@+id/teleopCubeFloor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes on the Floor can be manipulated by robot" />
+
+            <CheckBox
+                android:id="@+id/teleopCubePerson"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes can be loaded onto the robot via the Players' chutes" />
+
+            <EditText
+                android:id="@+id/teleopCubeCountText"
+                style="@android:style/Widget.AutoCompleteTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:selectAllOnFocus="false"
+                android:text="Maximum number of Cubes Robot can hold: [null]"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:visibility="visible" />
+
+            <SeekBar
+                android:id="@+id/teleopCubeCount"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="3" />
+
+            <CheckBox
+                android:id="@+id/teleopClimb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot is able to Climb Tall Balance during Endgame" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="117dp" />
+
+            <EditText
+                android:id="@+id/autoHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text="Autonomous Period" />
+
+            <CheckBox
+                android:id="@+id/auto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Does the team have an autonomous period?" />
+
+            <CheckBox
+                android:id="@+id/autoLne"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Does autonomous cross the Auto Line?" />
+
+            <EditText
+                android:id="@+id/autoBalText"
+                style="@android:style/Widget.AutoCompleteTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:selectAllOnFocus="false"
+                android:text="Boxes placed on Tall Balance: [null]"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:visibility="visible" />
+
+            <SeekBar
+                android:id="@+id/autoBal"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="3" />
+
+            <EditText
+                android:id="@+id/autoSwiText"
+                style="@android:style/Widget.AutoCompleteTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:selectAllOnFocus="false"
+                android:text="Boxes placed on Short Switch: [null]"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:visibility="visible" />
+
+            <SeekBar
+                android:id="@+id/autoSwi"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="3" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_anchor="@+id/scrollView2"
+        app:layout_anchorGravity="bottom|center" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:layout_anchor="@+id/scrollView2"
+        app:layout_anchorGravity="right|top"
+        app:srcCompat="@android:drawable/ic_dialog_email" />
+
+</android.support.design.widget.CoordinatorLayout>
