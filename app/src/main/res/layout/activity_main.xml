@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,9 +9,10 @@
     tools:context="org.team2180.scouting.MainActivity">
 
     <ScrollView
-        android:id="@+id/scrollView2"
+        android:id="@+id/scrollForm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:visibility="visible"
         tools:layout_editor_absoluteY="-8dp">
 
         <LinearLayout
@@ -19,6 +21,32 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+
+            <TextView
+                android:id="@+id/formHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:text="Scouting Form"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display3" />
+
+            <TextView
+                android:id="@+id/teamIDText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:text="Team #"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+            <Spinner
+                android:id="@+id/teamID"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/btn_dropdown" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
 
             <TextView
                 android:id="@+id/teleopHead"
@@ -94,7 +122,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
 
             <CheckBox
-                android:id="@+id/auto"
+                android:id="@+id/autoCan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -143,13 +171,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
 
-            <EditText
+            <TextView
                 android:id="@+id/comments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textMultiLine"
-                tools:text="Put any other notes here" />
+                android:text="comments go here" />
 
             <Space
                 android:layout_width="match_parent"
@@ -165,14 +191,171 @@
         </LinearLayout>
     </ScrollView>
 
+    <ScrollView
+        android:id="@+id/scrollRead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:layout_editor_absoluteY="-8dp">
+
+        <LinearLayout
+            android:id="@+id/viewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:id="@+id/viewHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:text="View Team"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display3" />
+
+            <TextView
+                android:id="@+id/viewTeamIDText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:text="Team #"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+            <Spinner
+                android:id="@+id/viewTeamID"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/btn_dropdown" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+
+            <TextView
+                android:id="@+id/viewTeleopHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:text="Teleoperated Period"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopCubes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Power-Up Cubes can be handled by Robot" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Short Switch can have cubes placed in it by Robot" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopBalance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tall Balance can have cubes placed in it by Robot" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopCubeFloor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes on the Floor can be manipulated by robot" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopCubePerson"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes can be loaded onto the robot via the Players' chutes" />
+
+            <TextView
+                android:id="@+id/viewTeleopCubeCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Maximmum Cubes robot is able to handle at once"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopClimb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot is able to Climb Tall Balance during Endgame" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+            <TextView
+                android:id="@+id/viewAutoHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text="Autonomous Period"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+            <CheckBox
+                android:id="@+id/viewAutoCan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Does the team have an autonomous period?" />
+
+            <CheckBox
+                android:id="@+id/viewAutoLne"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Does autonomous cross the Auto Line?" />
+
+            <TextView
+                android:id="@+id/viewAutoBal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes robot can place on Big Balance"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewAutoSwi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes robot can place on small switch"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+            <TextView
+                android:id="@+id/viewComments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+
+        </LinearLayout>
+    </ScrollView>
+
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/sendData"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        app:layout_anchor="@+id/scrollView2"
+        android:visibility="visible"
+        app:layout_anchor="@+id/scrollForm"
         app:layout_anchorGravity="right|bottom"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        app:srcCompat="@android:drawable/ic_menu_send" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/switchMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        android:clickable="true"
+        android:visibility="visible"
+        app:layout_anchor="@+id/scrollForm"
+        app:layout_anchorGravity="bottom|center"
+        app:srcCompat="@android:drawable/ic_menu_info_details" />
 
 </android.support.design.widget.CoordinatorLayout>
