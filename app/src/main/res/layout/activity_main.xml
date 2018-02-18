@@ -50,6 +50,7 @@
 
             <TextView
                 android:id="@+id/teleopHead"
+                android:textColor="#e53"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
@@ -116,6 +117,7 @@
                 android:id="@+id/autoHead"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#53e"
                 android:ems="10"
                 android:inputType="textPersonName"
                 android:text="Autonomous Period"
@@ -171,11 +173,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
 
-            <TextView
+            <EditText
                 android:id="@+id/comments"
+                style="@style/Widget.AppCompat.EditText"
+                android:textColorHint="#284"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="comments go here" />
+                android:hint="Write any Notes or Comments about the Team?" />
 
             <Space
                 android:layout_width="match_parent"
@@ -185,7 +189,7 @@
                 android:id="@+id/JSONoutput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TextView"
+                android:text="Debug Output here, please ignore!"
                 android:textAppearance="@style/TextAppearance.AppCompat.Notification.Line2" />
 
         </LinearLayout>
@@ -195,7 +199,7 @@
         android:id="@+id/scrollRead"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:visibility="visible"
         tools:layout_editor_absoluteY="-8dp">
 
         <LinearLayout
@@ -243,30 +247,35 @@
                 android:id="@+id/viewTeleopCubes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clickable="false"
                 android:text="Power-Up Cubes can be handled by Robot" />
 
             <CheckBox
                 android:id="@+id/viewTeleopSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clickable="false"
                 android:text="Short Switch can have cubes placed in it by Robot" />
 
             <CheckBox
                 android:id="@+id/viewTeleopBalance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clickable="false"
                 android:text="Tall Balance can have cubes placed in it by Robot" />
 
             <CheckBox
                 android:id="@+id/viewTeleopCubeFloor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clickable="false"
                 android:text="Cubes on the Floor can be manipulated by robot" />
 
             <CheckBox
                 android:id="@+id/viewTeleopCubePerson"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clickable="false"
                 android:text="Cubes can be loaded onto the robot via the Players' chutes" />
 
             <TextView
@@ -280,6 +289,7 @@
                 android:id="@+id/viewTeleopClimb"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clickable="false"
                 android:text="Robot is able to Climb Tall Balance during Endgame" />
 
             <Space
@@ -300,6 +310,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="false"
                 android:text="Does the team have an autonomous period?" />
 
             <CheckBox
@@ -307,6 +318,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="false"
                 android:text="Does autonomous cross the Auto Line?" />
 
             <TextView
@@ -328,10 +340,17 @@
                 android:layout_height="100dp" />
 
             <TextView
+                android:id="@+id/viewCommentDescriptor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Comments:" />
+
+            <TextView
                 android:id="@+id/viewComments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TextView" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textSize="18sp" />
 
         </LinearLayout>
     </ScrollView>
@@ -340,10 +359,11 @@
         android:id="@+id/sendData"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
+        android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
         android:visibility="visible"
-        app:layout_anchor="@+id/scrollForm"
+
+        app:backgroundTint="#396"
         app:layout_anchorGravity="right|bottom"
         app:srcCompat="@android:drawable/ic_menu_send" />
 
@@ -351,11 +371,13 @@
         android:id="@+id/switchMode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:clickable="true"
+        android:focusable="true"
         android:visibility="visible"
-        app:layout_anchor="@+id/scrollForm"
-        app:layout_anchorGravity="bottom|center"
+        app:backgroundTint="#47a"
+        app:layout_anchorGravity="center|bottom"
         app:srcCompat="@android:drawable/ic_menu_info_details" />
 
 </android.support.design.widget.CoordinatorLayout>
