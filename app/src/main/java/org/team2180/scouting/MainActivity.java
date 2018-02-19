@@ -1,8 +1,17 @@
 package org.team2180.scouting;
 
 import android.R.drawable;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -24,15 +33,22 @@ import org.team2180.scouting.listeners.DiscreteBarUpdater;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-public class MainActivity extends AppCompatActivity {
-    public HashMap<String,JSONObject> teamData = new HashMap<>();
+import java.util.UUID;
 
+public class MainActivity extends AppCompatActivity {
+
+    public HashMap<String,JSONObject> teamData = new HashMap<>();
+    static long countDown = 3;
+    public final int REQUEST_ENABLE_BT = 910;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViewById(R.id.viewContainer).setVisibility(View.GONE);
+
         // Initialize all bars and their labels; we need this to modify the labels based on the bar content
+
+        //Spinners
         final Spinner teamSelector = (Spinner) findViewById(R.id.teamID);
             final ArrayAdapter<CharSequence> selectorAdapter = ArrayAdapter.createFromResource(this, R.array.team_numbers, android.R.layout.simple_spinner_item);
             teamSelector.setAdapter(selectorAdapter);
@@ -41,17 +57,25 @@ public class MainActivity extends AppCompatActivity {
                     this, android.R.layout.simple_spinner_dropdown_item, new ArrayList<CharSequence>());
             reportArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             reportSelector.setAdapter(reportArrayAdapter);
+
+        //SeekBars
         final SeekBar autoSwi = (SeekBar) findViewById(R.id.autoSwi);
         final SeekBar autoBal = (SeekBar) findViewById(R.id.autoBal);
         final SeekBar teleopCubeCount = (SeekBar) findViewById(R.id.teleopCubeCount);
+
+        //Text Views
         final TextView txtAutoSwi = (TextView) findViewById(R.id.autoSwiTxt);
         final TextView txtAutoBal = (TextView) findViewById(R.id.autoBalTxt);
         final TextView txtTeleopCubeCount = (TextView) findViewById(R.id.teleopCubeCountTxt);
+
+        //FABs
         final FloatingActionButton sendButton = (FloatingActionButton) findViewById(R.id.sendData);
         final FloatingActionButton swapButton = (FloatingActionButton) findViewById(R.id.switchMode);
-        //Initialize other variables
-        final String spinnerTitle = ((TextView)findViewById(R.id.teamIDText)).getText().toString();
+        // /Initialize other variables
 
+        final String spinnerTitle = ((TextView)findViewById(R.id.teamIDText)).getText().toString();
+        //Bluetooth
+        BluetoothAdapter blu = getEnabledBlueOrExit(swapButton, false);
         //--END INITIALIZATION--\\
 
         // Anonymous listener for the action buttons, doesn't deserve it's own class (yet)
@@ -128,8 +152,49 @@ public class MainActivity extends AppCompatActivity {
         txtAutoSwi.setText(txtAutoSwi.getText() + ": " + autoSwi.getProgress());
         txtAutoBal.setText(txtAutoBal.getText() + ": " + autoBal.getProgress());
         txtTeleopCubeCount.setText(txtTeleopCubeCount.getText() + ": " + teleopCubeCount.getProgress());
-
+        //Test
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mReceiver, filter);
+        BluetoothAdapter.getDefaultAdapter().startDiscovery();
     }
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                String deviceName = device.getName();
+                String deviceHardwareAddress = device.getAddress(); // MAC address
+                Log.d(deviceName,deviceHardwareAddress);
+                int line = 173;
+                if(deviceName.equals("max-pc") && deviceHardwareAddress.equals("10:02:B5:79:5E:D1")){
+                    try {
+                        BluetoothSocket sock = device.createRfcommSocketToServiceRecord(UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee"));
+                        line += 2;
+                        BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                        line += 2;
+                        sock.connect();
+                        sock.getOutputStream().write(10);
+                        sock.getOutputStream().flush();
+                        line += 2;
+                        sock.close();
+                    }catch(Exception e){
+                        Log.e("ERROR@"+line,e.toString());
+                    }
+                }
+
+            }
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Don't forget to unregister the ACTION_FOUND receiver.
+        unregisterReceiver(mReceiver);
+    }
+
     //Auto-generated
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -152,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
     public String gatherData(){
         // Probably not the best way to go about this.
         ViewGroup root = (ViewGroup) findViewById(R.id.mainContainer);
@@ -235,6 +301,37 @@ public class MainActivity extends AppCompatActivity {
             }catch(Exception e){
                 Log.e("EXCEPTION",e.toString());
             }
+        }
+    }
+
+    public BluetoothAdapter getEnabledBlueOrExit(View snackAttach,boolean fail){
+        BluetoothAdapter blu = BluetoothAdapter.getDefaultAdapter();
+        if(blu==null||fail){
+            final String snackBarExitText = "No Bluetooth Adapter detected. App is now exiting";
+            final Snackbar exitNoBlu = Snackbar.make(snackAttach,snackBarExitText,Snackbar.LENGTH_INDEFINITE);
+            exitNoBlu.show();
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable(){
+                public void run(){
+                    //After delayMillis milliseconds
+                    finish();
+                    System.exit(1);
+                }
+            },countDown*1000);
+
+        }else if (!blu.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
+        }
+
+        return blu;
+    }
+
+    @Override
+    public void onActivityResult (int requestCode, int resultCode, Intent data){
+        if(requestCode==REQUEST_ENABLE_BT){
+            if(!BluetoothAdapter.getDefaultAdapter().isEnabled())
+                getEnabledBlueOrExit(findViewById(R.id.switchMode),true);
         }
     }
 }
