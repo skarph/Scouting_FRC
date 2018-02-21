@@ -30,9 +30,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.team2180.scouting.listeners.DiscreteBarUpdater;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +44,10 @@ public class MainActivity extends AppCompatActivity {
     public HashMap<String,JSONObject> teamData = new HashMap<>();
     static long countDown = 3;
     public final int REQUEST_ENABLE_BT = 910;
+    public final String deviceName = "max-pc";
+    public final UUID serviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
+    BluetoothDevice bluetoothDevice;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,13 +58,13 @@ public class MainActivity extends AppCompatActivity {
 
         //Spinners
         final Spinner teamSelector = (Spinner) findViewById(R.id.teamID);
-            final ArrayAdapter<CharSequence> selectorAdapter = ArrayAdapter.createFromResource(this, R.array.team_numbers, android.R.layout.simple_spinner_item);
-            teamSelector.setAdapter(selectorAdapter);
+        final ArrayAdapter<CharSequence> selectorAdapter = ArrayAdapter.createFromResource(this, R.array.team_numbers, android.R.layout.simple_spinner_item);
+        teamSelector.setAdapter(selectorAdapter);
         final Spinner reportSelector = (Spinner) findViewById(R.id.viewTeamID);
-            final ArrayAdapter<CharSequence> reportArrayAdapter = new ArrayAdapter<CharSequence>(
-                    this, android.R.layout.simple_spinner_dropdown_item, new ArrayList<CharSequence>());
-            reportArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            reportSelector.setAdapter(reportArrayAdapter);
+        final ArrayAdapter<CharSequence> reportArrayAdapter = new ArrayAdapter<CharSequence>(
+                this, android.R.layout.simple_spinner_dropdown_item, new ArrayList<CharSequence>());
+        reportArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        reportSelector.setAdapter(reportArrayAdapter);
 
         //SeekBars
         final SeekBar autoSwi = (SeekBar) findViewById(R.id.autoSwi);
@@ -73,44 +81,66 @@ public class MainActivity extends AppCompatActivity {
         final FloatingActionButton swapButton = (FloatingActionButton) findViewById(R.id.switchMode);
         // /Initialize other variables
 
-        final String spinnerTitle = ((TextView)findViewById(R.id.teamIDText)).getText().toString();
+        final String spinnerTitle = ((TextView) findViewById(R.id.teamIDText)).getText().toString();
         //Bluetooth
-        BluetoothAdapter blu = getEnabledBlueOrExit(swapButton, false);
         //--END INITIALIZATION--\\
 
         // Anonymous listener for the action buttons, doesn't deserve it's own class (yet)
         sendButton.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
                 String text = gatherData();
-                ((TextView)findViewById(R.id.JSONoutput)).setText(text);
+                ((TextView) findViewById(R.id.JSONoutput)).setText(text);
+
                 try {
                     JSONObject obj = new JSONObject(text);
                     int i = 0;
                     try {
-                        while (teamData.get(obj.getString("teamID") + ":" + i) != null) {i++;}
-                    }catch(JSONException e){}
-                    teamData.put(obj.getString("teamID") + ":" + i,obj);
-                    reportArrayAdapter.add(obj.getString("teamID") + ": Report "+i);
-                }catch(JSONException e){
-                    Log.e("Exception",e.toString());
+                        while (teamData.get(obj.getString("teamID") + ":" + i) != null) {
+                            i++;
+                        }
+                    } catch (JSONException e) {
+                    }
+                    teamData.put(obj.getString("teamID") + ":" + i, obj);
+                    reportArrayAdapter.add(obj.getString("teamID") + ": Report " + i);
+                } catch (JSONException e) {
+                    Log.e("Exception", e.toString());
                 }
-                ((EditText)findViewById(R.id.comments)).setText("");
+                ((EditText) findViewById(R.id.comments)).setText("");
+
+                try{
+                    BluetoothSocket bS = getSockToServer();
+                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                    bS.connect();
+                    OutputStream bsO = bS.getOutputStream();
+                    InputStream bsI = bS.getInputStream();
+                    byte[] bytes = text.getBytes();
+                    bsO.write(bytes);//1 represents OK handshake
+                    Log.d("sendButton.onClick","sent condition code 1");
+                    int handRespond = (int)bsI.read();
+                    Log.d("recieved",handRespond+"");
+                    if(handRespond == 1){
+                        bsO.write(text.getBytes("UTF-8"));
+                    }
+                }catch(Exception e){
+                    Log.e("sendButton.onClick",e.toString());
+                }
             }
         });
-        swapButton.setOnClickListener(new View.OnClickListener(){
+        swapButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
-                if(findViewById(R.id.mainContainer).getVisibility()==View.VISIBLE){
+            public void onClick(View view) {
+                if (findViewById(R.id.mainContainer).getVisibility() == View.VISIBLE) {
                     findViewById(R.id.mainContainer).setVisibility(View.GONE);
                     findViewById(R.id.viewContainer).setVisibility(View.VISIBLE);
-                    ((FloatingActionButton)view).setImageResource(drawable.ic_menu_edit);
-                }else{
+                    ((FloatingActionButton) view).setImageResource(drawable.ic_menu_edit);
+                } else {
                     //mainContainer is gone
-                    Log.d("viewCont",Boolean.toString(findViewById(R.id.viewComments).getVisibility()==View.VISIBLE));
+                    Log.d("viewCont", Boolean.toString(findViewById(R.id.viewComments).getVisibility() == View.VISIBLE));
                     findViewById(R.id.mainContainer).setVisibility(View.VISIBLE);
                     findViewById(R.id.viewContainer).setVisibility(View.GONE);
-                    ((FloatingActionButton)view).setImageResource(drawable.ic_menu_info_details);
+                    ((FloatingActionButton) view).setImageResource(drawable.ic_menu_info_details);
                 }
             }
         });
@@ -118,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         teamSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                ((TextView)findViewById(R.id.teamIDText)).setText(
+                ((TextView) findViewById(R.id.teamIDText)).setText(
                         spinnerTitle + ": " + adapterView.getItemAtPosition(i).toString());
             }
 
@@ -128,13 +158,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        reportSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+        reportSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                ((TextView)findViewById(R.id.viewTeamIDText)).setText(
+                ((TextView) findViewById(R.id.viewTeamIDText)).setText(
                         spinnerTitle + ": " + adapterView.getItemAtPosition(i).toString());
-                    String reportID = adapterView.getItemAtPosition(i).toString().replaceAll(" Report ","");
-                    displayTeamInfo(reportID);
+                String reportID = adapterView.getItemAtPosition(i).toString().replaceAll(" Report ", "");
+                displayTeamInfo(reportID);
             }
 
             @Override
@@ -146,53 +176,12 @@ public class MainActivity extends AppCompatActivity {
 
         // These listeners got extremely repetitive, so now they have their own class.
         // See org.team2180.scouting.listeners.DiscreteBarUpdater for more
-        autoSwi.setOnSeekBarChangeListener(new DiscreteBarUpdater(autoSwi,txtAutoSwi));
-        autoBal.setOnSeekBarChangeListener(new DiscreteBarUpdater(autoBal,txtAutoBal));
-        teleopCubeCount.setOnSeekBarChangeListener(new DiscreteBarUpdater(teleopCubeCount,txtTeleopCubeCount));
+        autoSwi.setOnSeekBarChangeListener(new DiscreteBarUpdater(autoSwi, txtAutoSwi));
+        autoBal.setOnSeekBarChangeListener(new DiscreteBarUpdater(autoBal, txtAutoBal));
+        teleopCubeCount.setOnSeekBarChangeListener(new DiscreteBarUpdater(teleopCubeCount, txtTeleopCubeCount));
         txtAutoSwi.setText(txtAutoSwi.getText() + ": " + autoSwi.getProgress());
         txtAutoBal.setText(txtAutoBal.getText() + ": " + autoBal.getProgress());
         txtTeleopCubeCount.setText(txtTeleopCubeCount.getText() + ": " + teleopCubeCount.getProgress());
-        //Test
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter);
-        BluetoothAdapter.getDefaultAdapter().startDiscovery();
-    }
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                Log.d(deviceName,deviceHardwareAddress);
-                int line = 173;
-                if(deviceName.equals("max-pc") && deviceHardwareAddress.equals("10:02:B5:79:5E:D1")){
-                    try {
-                        BluetoothSocket sock = device.createRfcommSocketToServiceRecord(UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee"));
-                        line += 2;
-                        BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-                        line += 2;
-                        sock.connect();
-                        sock.getOutputStream().write(10);
-                        sock.getOutputStream().flush();
-                        line += 2;
-                        sock.close();
-                    }catch(Exception e){
-                        Log.e("ERROR@"+line,e.toString());
-                    }
-                }
-
-            }
-        }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Don't forget to unregister the ACTION_FOUND receiver.
-        unregisterReceiver(mReceiver);
     }
 
     //Auto-generated
@@ -304,6 +293,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onActivityResult (int requestCode, int resultCode, Intent data){
+        if(requestCode==REQUEST_ENABLE_BT){
+            if(!BluetoothAdapter.getDefaultAdapter().isEnabled())
+                getEnabledBlueOrExit(findViewById(R.id.switchMode),true);
+        }
+    }
+    protected void onDestroy() {
+        super.onDestroy();
+        // Don't forget to unregister the ACTION_FOUND receiver.
+        unregisterReceiver(mReceiver);
+    }
+
     public BluetoothAdapter getEnabledBlueOrExit(View snackAttach,boolean fail){
         BluetoothAdapter blu = BluetoothAdapter.getDefaultAdapter();
         if(blu==null||fail){
@@ -326,12 +328,57 @@ public class MainActivity extends AppCompatActivity {
 
         return blu;
     }
+    public BluetoothSocket getSockToServer(){
+        BluetoothAdapter  mBA = getEnabledBlueOrExit(findViewById(R.id.switchMode), false);
+        Set<BluetoothDevice> pairedDevices = mBA.getBondedDevices();
 
-    @Override
-    public void onActivityResult (int requestCode, int resultCode, Intent data){
-        if(requestCode==REQUEST_ENABLE_BT){
-            if(!BluetoothAdapter.getDefaultAdapter().isEnabled())
-                getEnabledBlueOrExit(findViewById(R.id.switchMode),true);
+        //Already have device? Do nothing.
+        if(bluetoothDevice==null) {
+            //Already Paired?
+            if (pairedDevices.size() > 0) {
+                // There are paired devices. Get the name and address of each paired device.
+                for (BluetoothDevice device : pairedDevices) {
+                    if (device.getName().equals(deviceName)) {
+                        bluetoothDevice = device;
+                        break;
+                    }
+                }
+            }
+            //End; already paired
+            //Found a device in already paired?
+            if(bluetoothDevice==null){
+                //If not, then discover it.
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                registerReceiver(mReceiver, filter);
+                //bluetoothDevice = device; ^^
+            }
+            if(bluetoothDevice==null){
+                //Give up
+                Log.e("getSockToServer","Could not find device'"+deviceName+"'");
+                return null;
+            }
+        }
+        try {
+            return bluetoothDevice.createRfcommSocketToServiceRecord(serviceUUID);
+        }catch(IOException e){
+            //Probably a UUID error?
+            Log.e("getSockToServer","Could not create a socket with '"+deviceName+"'");
+            return null;
         }
     }
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                String deviceName = device.getName();
+                String deviceHardwareAddress = device.getAddress(); // MAC address
+                if(device.getName().equals(deviceName)){
+                    bluetoothDevice = device;
+                }
+            }
+        }
+    };
 }
