@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     public final int REQUEST_ENABLE_BT = 910;
     public final String deviceName = "max-pc";
     public final UUID serviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
+    public ArrayAdapter<CharSequence> reportArrayAdapter;
     BluetoothDevice bluetoothDevice;
 
     @Override
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         final ArrayAdapter<CharSequence> selectorAdapter = ArrayAdapter.createFromResource(this, R.array.team_numbers, android.R.layout.simple_spinner_item);
         teamSelector.setAdapter(selectorAdapter);
         final Spinner reportSelector = (Spinner) findViewById(R.id.viewTeamID);
-        final ArrayAdapter<CharSequence> reportArrayAdapter = new ArrayAdapter<CharSequence>(
+        reportArrayAdapter = new ArrayAdapter<CharSequence>(
                 this, android.R.layout.simple_spinner_dropdown_item, new ArrayList<CharSequence>());
         reportArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         reportSelector.setAdapter(reportArrayAdapter);
@@ -79,52 +80,74 @@ public class MainActivity extends AppCompatActivity {
         //FABs
         final FloatingActionButton sendButton = (FloatingActionButton) findViewById(R.id.sendData);
         final FloatingActionButton swapButton = (FloatingActionButton) findViewById(R.id.switchMode);
+        final FloatingActionButton refreshButton = (FloatingActionButton) findViewById(R.id.refreshButton);
         // /Initialize other variables
 
         final String spinnerTitle = ((TextView) findViewById(R.id.teamIDText)).getText().toString();
         //Bluetooth
+        getEnabledBlueOrExit(swapButton,false);
         //--END INITIALIZATION--\\
 
         // Anonymous listener for the action buttons, doesn't deserve it's own class (yet)
         sendButton.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
                 String text = gatherData();
                 ((TextView) findViewById(R.id.JSONoutput)).setText(text);
-
-                try {
-                    JSONObject obj = new JSONObject(text);
-                    int i = 0;
-                    try {
-                        while (teamData.get(obj.getString("teamID") + ":" + i) != null) {
-                            i++;
-                        }
-                    } catch (JSONException e) {
-                    }
-                    teamData.put(obj.getString("teamID") + ":" + i, obj);
-                    reportArrayAdapter.add(obj.getString("teamID") + ": Report " + i);
-                } catch (JSONException e) {
-                    Log.e("Exception", e.toString());
-                }
+                appendToTeamData(text);
                 ((EditText) findViewById(R.id.comments)).setText("");
-
+                BluetoothSocket bS = null;
                 try{
-                    BluetoothSocket bS = getSockToServer();
-                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                    bS = getSockToServer();
                     bS.connect();
                     OutputStream bsO = bS.getOutputStream();
                     InputStream bsI = bS.getInputStream();
-                    byte[] bytes = text.getBytes();
-                    bsO.write(bytes);//1 represents OK handshake
+                    bsO.write(1);//Code upload
+                    bsO.flush();
                     Log.d("sendButton.onClick","sent condition code 1");
                     int handRespond = (int)bsI.read();
                     Log.d("recieved",handRespond+"");
                     if(handRespond == 1){
                         bsO.write(text.getBytes("UTF-8"));
+                        bsO.flush();
                     }
                 }catch(Exception e){
                     Log.e("sendButton.onClick",e.toString());
+                    try{
+                        bS.close();
+                    }catch(IOException ioE){
+                        Log.e("sendButton.onClick{SNC}",e.toString());
+                    }
+                }
+            }
+        });
+        refreshButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                BluetoothSocket bS = null;
+                try{
+                    bS = getSockToServer();
+                    bS.connect();
+                    OutputStream bsO = bS.getOutputStream();
+                    InputStream bsI = bS.getInputStream();
+                    bsO.write(2);//Code download
+                    bsO.flush();
+                    int itemCount = bsI.read();
+                    byte[] rawBytes = new byte[8192];
+                    for(int i = 0; i<itemCount; i++){
+                        bsO.write(i);
+                        bsO.flush();
+                        bsI.read(rawBytes);
+                        String newEntry = new String(rawBytes);
+                        appendToTeamData(newEntry);
+                    }
+                }catch(Exception e){
+                    Log.e("sendButton.onClick",e.toString());
+                    try{
+                        bS.close();
+                    }catch(IOException ioE){
+                        Log.e("sendButton.onClick{SNC}",e.toString());
+                    }
                 }
             }
         });
@@ -144,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
         //--Team/Report Selector--\\
         teamSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -271,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
         Byte[] byteArr = {};
         return byteArr;
     }
+
     public void displayTeamInfo(String reportID){
         JSONObject obj = teamData.get(reportID);
         if(obj==null){Log.e("MainActivity",reportID + "is not a valid Report ID!"); return;}
@@ -290,6 +315,22 @@ public class MainActivity extends AppCompatActivity {
             }catch(Exception e){
                 Log.e("EXCEPTION",e.toString());
             }
+        }
+    }
+    public void appendToTeamData(String text){
+        try {
+            JSONObject obj = new JSONObject(text);
+            int i = 0;
+            try {
+                while (teamData.get(obj.getString("teamID") + ":" + i) != null) {
+                    i++;
+                }
+            } catch (JSONException e) {
+            }
+            teamData.put(obj.getString("teamID") + ":" + i, obj);
+            reportArrayAdapter.add(obj.getString("teamID") + ": Report " + i);
+        } catch (JSONException e) {
+            Log.e("Exception", e.toString());
         }
     }
 
@@ -329,9 +370,10 @@ public class MainActivity extends AppCompatActivity {
         return blu;
     }
     public BluetoothSocket getSockToServer(){
+
         BluetoothAdapter  mBA = getEnabledBlueOrExit(findViewById(R.id.switchMode), false);
         Set<BluetoothDevice> pairedDevices = mBA.getBondedDevices();
-
+        bluetoothDevice = null;
         //Already have device? Do nothing.
         if(bluetoothDevice==null) {
             //Already Paired?
@@ -348,8 +390,11 @@ public class MainActivity extends AppCompatActivity {
             //Found a device in already paired?
             if(bluetoothDevice==null){
                 //If not, then discover it.
+                BluetoothAdapter.getDefaultAdapter().startDiscovery();
                 IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
                 registerReceiver(mReceiver, filter);
+                BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+
                 //bluetoothDevice = device; ^^
             }
             if(bluetoothDevice==null){

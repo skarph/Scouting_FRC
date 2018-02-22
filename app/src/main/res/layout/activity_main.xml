@@ -363,7 +363,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:visibility="visible"
 
-        app:backgroundTint="#396"
+        app:backgroundTint="#4a7"
         app:layout_anchorGravity="right|bottom"
         app:srcCompat="@android:drawable/ic_menu_send" />
 
@@ -376,8 +376,21 @@
         android:clickable="true"
         android:focusable="true"
         android:visibility="visible"
-        app:backgroundTint="#47a"
+        app:backgroundTint="#e94"
         app:layout_anchorGravity="center|bottom"
         app:srcCompat="@android:drawable/ic_menu_info_details" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/refreshButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="visible"
+        app:backgroundTint="#47a"
+        app:layout_anchorGravity="center|end"
+        app:srcCompat="@android:drawable/ic_menu_rotate" />
 
 </android.support.design.widget.CoordinatorLayout>
