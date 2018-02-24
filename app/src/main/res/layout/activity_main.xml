@@ -390,7 +390,7 @@
         android:focusable="true"
         android:visibility="visible"
         app:backgroundTint="#47a"
-        app:layout_anchorGravity="center|end"
+        app:layout_anchorGravity="center|bottom"
         app:srcCompat="@android:drawable/ic_menu_rotate" />
 
 </android.support.design.widget.CoordinatorLayout>

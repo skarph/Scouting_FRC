@@ -15,7 +15,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -30,18 +29,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.team2180.scouting.listeners.DiscreteBarUpdater;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    public HashMap<String,JSONObject> teamData = new HashMap<>();
+    public JSONObject teamData = new JSONObject();
     static long countDown = 3;
     public final int REQUEST_ENABLE_BT = 910;
     public final String deviceName = "max-pc";
@@ -94,63 +94,128 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String text = gatherData();
                 ((TextView) findViewById(R.id.JSONoutput)).setText(text);
-                appendToTeamData(text);
                 ((EditText) findViewById(R.id.comments)).setText("");
+                try {
+                    JSONObject teamEntry = new JSONObject(text);
+                    if (isDataInSet(teamEntry) != null) {return;}
+                    appendToTeamData(teamEntry);
+                }catch(JSONException e){return;}
+
                 BluetoothSocket bS = null;
                 try{
                     bS = getSockToServer();
+                    if(bS==null){return;}
+                    Log.d("sendButton.onClick","found a sock! ");
                     bS.connect();
+                }catch(Exception e){
+                    Log.e("sendButton.onClick","trying fallback");
+                    try{
+                        bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
+                        bS.connect();
+                    }catch(Exception ioE){
+                        Log.e("sendButton.onClick{SNC}",e.toString());
+                    }
+                }
+                try {
                     OutputStream bsO = bS.getOutputStream();
                     InputStream bsI = bS.getInputStream();
                     bsO.write(1);//Code upload
                     bsO.flush();
-                    Log.d("sendButton.onClick","sent condition code 1");
-                    int handRespond = (int)bsI.read();
-                    Log.d("recieved",handRespond+"");
-                    if(handRespond == 1){
+                    Log.d("sendButton.onClick", "sent condition code 1");
+                    int handRespond = (int) bsI.read();
+                    Log.d("recieved", handRespond + "");
+                    if (handRespond == 1) {
                         bsO.write(text.getBytes("UTF-8"));
                         bsO.flush();
                     }
+                    bS.close();
                 }catch(Exception e){
-                    Log.e("sendButton.onClick",e.toString());
-                    try{
-                        bS.close();
-                    }catch(IOException ioE){
-                        Log.e("sendButton.onClick{SNC}",e.toString());
-                    }
+                    Log.e("sendBUtton.onclick",e.toString());
                 }
             }
         });
         refreshButton.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 BluetoothSocket bS = null;
                 try{
                     bS = getSockToServer();
+                    if(bS==null){return;}
+                    Log.d("sendButton.onClick","found a sock! ");
                     bS.connect();
-                    OutputStream bsO = bS.getOutputStream();
-                    InputStream bsI = bS.getInputStream();
+                }catch(Exception e){
+                    Log.e("sendButton.onClick","trying fallback");
+                    try{
+                        bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
+                        bS.connect();
+                    }catch(Exception ioE){
+                        Log.e("sendButton.onClick{SNC}",e.toString());
+                    }
+                }
+                try {
+                    DataInputStream bsI = new DataInputStream(bS.getInputStream());
+                    DataOutputStream bsO = new DataOutputStream(bS.getOutputStream());
                     bsO.write(2);//Code download
                     bsO.flush();
-                    int itemCount = bsI.read();
-                    byte[] rawBytes = new byte[8192];
-                    for(int i = 0; i<itemCount; i++){
-                        bsO.write(i);
+
+                    boolean serverStillHasData = true;
+                    int count = 0;
+                    int response = 2;
+
+                    while (serverStillHasData) {
+                        byte[] rawBytes = new byte[8192];
+                        Log.d("refresh", "reading entry " + count);
+                        //check if data is a clone
+                        try {
+                            JSONObject teamEntry = new JSONObject(bsI.readUTF());
+                            if (isDataInSet(teamEntry) != null) {
+                                Log.d("refresh", "entry " + count + " is the same as anoter entry, removing...");
+
+                            }else {
+                                Log.d("refresh", "entry " + count + " is new!");
+                                appendToTeamData(teamEntry);
+                            }
+                        } catch (JSONException e) {
+                            bsO.writeInt(1);
+                            bsO.close();
+                            Log.e("refresh: ", "error", e);
+                            bS.close();
+                            return;
+                        }
+                        try{
+                            bsO.writeInt(2);
+                            bsO.flush();
+                            count++;
+                            response = bsI.readInt();
+                        }catch(IOException e){};
+                        Log.d("refresh","server response:"+response);
+
+                        if (response==2){
+                            Log.d("refresh", "Continuing on to " + count);
+                            serverStillHasData = true;
+                        }else if(response==1){
+                            Log.d("refresh", "Possible finish up at entry " + (count-1));
+                            serverStillHasData = true;
+                        }else if(response==0){
+                            Log.d("refresh", "Finishing up at entry " + (count-1)+"...");
+                            serverStillHasData = false;
+                        }
                         bsO.flush();
-                        bsI.read(rawBytes);
-                        String newEntry = new String(rawBytes);
-                        appendToTeamData(newEntry);
                     }
-                }catch(Exception e){
-                    Log.e("sendButton.onClick",e.toString());
-                    try{
+
+                    bS.close();
+                    Log.d("refresh", "Finished up at entry " + (count-1));
+                } catch (IOException e) {
+                    Log.e("sendButton.onClick", e.toString());
+                    try {
                         bS.close();
-                    }catch(IOException ioE){
-                        Log.e("sendButton.onClick{SNC}",e.toString());
+                    } catch (IOException ioE) {
+                        Log.e("sendButton.onClick{SNC}", e.toString());
                     }
                 }
             }
         });
+
         swapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -215,9 +280,10 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
+
     // Auto-generated
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    /*@Override
+    public boolean onOptiakeonsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -229,6 +295,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }*/
+
+    public JSONObject isDataInSet(JSONObject data) throws JSONException{
+        Iterator<?> teamItr = teamData.keys();
+        while(teamItr.hasNext()) {
+            JSONObject jobj= teamData.getJSONObject((String)teamItr.next());
+            if(jobj.toString().equals(data.toString())){
+                return jobj;
+            }
+        }
+        return null;
     }
 
     public String gatherData(){
@@ -297,29 +374,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void displayTeamInfo(String reportID){
-        JSONObject obj = teamData.get(reportID);
-        if(obj==null){Log.e("MainActivity",reportID + "is not a valid Report ID!"); return;}
-        Iterator<?> keys = obj.keys();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
-            String viewID = "view" + (key.charAt(0)+"").toUpperCase() + key.substring(1);
-            View viewView = findViewById(getResources().getIdentifier(viewID,"id",MainActivity.this.getPackageName()));
-
-            try{
-                 if(viewView instanceof CheckBox){
-                     ((CheckBox) viewView).setChecked(Boolean.valueOf(obj.get(key).toString()));
-                     viewView.setClickable(false);
-                }else if(viewView instanceof TextView) {
-                     ((TextView) viewView).setText((obj.get(key).toString()));
-                 }
-            }catch(Exception e){
-                Log.e("EXCEPTION",e.toString());
+        try {
+            JSONObject obj = teamData.getJSONObject(reportID);
+            if (obj == null) {
+                Log.e("MainActivity", reportID + "is not a valid Report ID!");
+                return;
             }
+            Iterator<?> keys = obj.keys();
+            while (keys.hasNext()) {
+                String key = (String) keys.next();
+                String viewID = "view" + (key.charAt(0) + "").toUpperCase() + key.substring(1);
+                View viewView = findViewById(getResources().getIdentifier(viewID, "id", MainActivity.this.getPackageName()));
+
+                try {
+                    if (viewView instanceof CheckBox) {
+                        ((CheckBox) viewView).setChecked(Boolean.valueOf(obj.get(key).toString()));
+                        viewView.setClickable(false);
+                    } else if (viewView instanceof TextView) {
+                        ((TextView) viewView).setText((obj.get(key).toString()));
+                    }
+                } catch (Exception e) {
+                    Log.e("EXCEPTION", e.toString());
+                }
+            }
+        }catch(Exception e){
+            Log.e("displayTeamInfo", e.toString());
         }
     }
-    public void appendToTeamData(String text){
+    public void appendToTeamData(JSONObject obj){
         try {
-            JSONObject obj = new JSONObject(text);
             int i = 0;
             try {
                 while (teamData.get(obj.getString("teamID") + ":" + i) != null) {
@@ -344,7 +427,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         // Don't forget to unregister the ACTION_FOUND receiver.
-        unregisterReceiver(mReceiver);
+        try{
+            unregisterReceiver(mReceiver);
+        }catch(IllegalArgumentException e){};
     }
 
     public BluetoothAdapter getEnabledBlueOrExit(View snackAttach,boolean fail){
@@ -388,13 +473,11 @@ public class MainActivity extends AppCompatActivity {
             }
             //End; already paired
             //Found a device in already paired?
-            if(bluetoothDevice==null){
+            if(bluetoothDevice==null) {
                 //If not, then discover it.
                 BluetoothAdapter.getDefaultAdapter().startDiscovery();
                 IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
                 registerReceiver(mReceiver, filter);
-                BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-
                 //bluetoothDevice = device; ^^
             }
             if(bluetoothDevice==null){
@@ -424,6 +507,7 @@ public class MainActivity extends AppCompatActivity {
                     bluetoothDevice = device;
                 }
             }
+            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
         }
     };
 }
