@@ -32,8 +32,6 @@ import org.team2180.scouting.listeners.DiscreteBarUpdater;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -45,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
     static long countDown = 3;
     public final int REQUEST_ENABLE_BT = 910;
     public final String deviceName = "max-pc";
-    public final UUID serviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
+    public final UUID serviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ed" +
+            "");
     public ArrayAdapter<CharSequence> reportArrayAdapter;
     BluetoothDevice bluetoothDevice;
 
@@ -92,126 +91,42 @@ public class MainActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = gatherData();
-                ((TextView) findViewById(R.id.JSONoutput)).setText(text);
-                ((EditText) findViewById(R.id.comments)).setText("");
-                try {
-                    JSONObject teamEntry = new JSONObject(text);
-                    if (isDataInSet(teamEntry) != null) {return;}
-                    appendToTeamData(teamEntry);
-                }catch(JSONException e){return;}
+                String text  = gatherData();
+                Log.d("refresh",(((EditText)findViewById(R.id.comments)).getText().toString()));
+                if(!(((EditText)findViewById(R.id.comments)).getText().toString().equals(""))) {
+                    try {
+                        JSONObject teamEntry = new JSONObject(text);
+                        boolean didSend = sendEntry(text);
 
-                BluetoothSocket bS = null;
-                try{
-                    bS = getSockToServer();
-                    if(bS==null){return;}
-                    Log.d("sendButton.onClick","found a sock! ");
-                    bS.connect();
-                }catch(Exception e){
-                    Log.e("sendButton.onClick","trying fallback");
-                    try{
-                        bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
-                        bS.connect();
-                    }catch(Exception ioE){
-                        Log.e("sendButton.onClick{SNC}",e.toString());
+                        if (isDataInSet(teamEntry) == null && didSend) {
+                            appendToTeamData(teamEntry);
+                            ((EditText) findViewById(R.id.comments)).setText("");
+                            Log.d("refresh", "adding new local data to entries!");
+                            dispSnack(swapButton,"New information sent!",Snackbar.LENGTH_SHORT);
+                        } else if (!didSend) {
+                            dispSnack(swapButton,"A bad error occured when uploading! Please restart your app and inform the developer",Snackbar.LENGTH_LONG);
+                            Log.d("refresh", "failed to send entry!");
+                        }
+
+                    } catch (JSONException e) {
+                        dispSnack(swapButton,"A bad error occured! Please restart your app and inform the developer",Snackbar.LENGTH_LONG);
                     }
+                    ((TextView) findViewById(R.id.JSONoutput)).setText(text);
+                }else{
+                    dispSnack(swapButton,"Please write a comment in order to send data!",Snackbar.LENGTH_SHORT);
+                    Log.d("refresh","no comments, not sending data!");
                 }
-                try {
-                    OutputStream bsO = bS.getOutputStream();
-                    InputStream bsI = bS.getInputStream();
-                    bsO.write(1);//Code upload
-                    bsO.flush();
-                    Log.d("sendButton.onClick", "sent condition code 1");
-                    int handRespond = (int) bsI.read();
-                    Log.d("recieved", handRespond + "");
-                    if (handRespond == 1) {
-                        bsO.write(text.getBytes("UTF-8"));
-                        bsO.flush();
-                    }
-                    bS.close();
-                }catch(Exception e){
-                    Log.e("sendBUtton.onclick",e.toString());
-                }
+
             }
         });
         refreshButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                BluetoothSocket bS = null;
-                try{
-                    bS = getSockToServer();
-                    if(bS==null){return;}
-                    Log.d("sendButton.onClick","found a sock! ");
-                    bS.connect();
-                }catch(Exception e){
-                    Log.e("sendButton.onClick","trying fallback");
-                    try{
-                        bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
-                        bS.connect();
-                    }catch(Exception ioE){
-                        Log.e("sendButton.onClick{SNC}",e.toString());
-                    }
-                }
-                try {
-                    DataInputStream bsI = new DataInputStream(bS.getInputStream());
-                    DataOutputStream bsO = new DataOutputStream(bS.getOutputStream());
-                    bsO.write(2);//Code download
-                    bsO.flush();
-
-                    boolean serverStillHasData = true;
-                    int count = 0;
-                    int response = 2;
-
-                    while (serverStillHasData) {
-                        byte[] rawBytes = new byte[8192];
-                        Log.d("refresh", "reading entry " + count);
-                        //check if data is a clone
-                        try {
-                            JSONObject teamEntry = new JSONObject(bsI.readUTF());
-                            if (isDataInSet(teamEntry) != null) {
-                                Log.d("refresh", "entry " + count + " is the same as anoter entry, removing...");
-
-                            }else {
-                                Log.d("refresh", "entry " + count + " is new!");
-                                appendToTeamData(teamEntry);
-                            }
-                        } catch (JSONException e) {
-                            bsO.writeInt(1);
-                            bsO.close();
-                            Log.e("refresh: ", "error", e);
-                            bS.close();
-                            return;
-                        }
-                        try{
-                            bsO.writeInt(2);
-                            bsO.flush();
-                            count++;
-                            response = bsI.readInt();
-                        }catch(IOException e){};
-                        Log.d("refresh","server response:"+response);
-
-                        if (response==2){
-                            Log.d("refresh", "Continuing on to " + count);
-                            serverStillHasData = true;
-                        }else if(response==1){
-                            Log.d("refresh", "Possible finish up at entry " + (count-1));
-                            serverStillHasData = true;
-                        }else if(response==0){
-                            Log.d("refresh", "Finishing up at entry " + (count-1)+"...");
-                            serverStillHasData = false;
-                        }
-                        bsO.flush();
-                    }
-
-                    bS.close();
-                    Log.d("refresh", "Finished up at entry " + (count-1));
-                } catch (IOException e) {
-                    Log.e("sendButton.onClick", e.toString());
-                    try {
-                        bS.close();
-                    } catch (IOException ioE) {
-                        Log.e("sendButton.onClick{SNC}", e.toString());
-                    }
+                boolean didGet = receiveEntry();
+                if(didGet){
+                    dispSnack(swapButton,"Your device is now current with our database!",Snackbar.LENGTH_SHORT);
+                }else{
+                    dispSnack(swapButton,"A problem occured with trying to sync, please try again!",Snackbar.LENGTH_LONG);
                 }
             }
         });
@@ -281,22 +196,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    // Auto-generated
-    /*@Override
-    public boolean onOptiakeonsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }*/
-
     public JSONObject isDataInSet(JSONObject data) throws JSONException{
         Iterator<?> teamItr = teamData.keys();
         while(teamItr.hasNext()) {
@@ -308,6 +207,125 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    public boolean sendEntry(String text){
+        BluetoothSocket bS = null;
+        try{
+            bS = getSockToServer();
+            Log.d("sendButton.onClick","found a sock! ");
+            bS.connect();
+        }catch(Exception e){
+            Log.e("sendButton.onClick","trying fallback");
+            try{
+                bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
+                bS.connect();
+            }catch(Exception ioE){
+                Log.e("sendButton.onClick{SNC}",e.toString());
+                return false;
+            }
+        }
+
+        if(bS==null){return false;}
+
+        try {
+            DataOutputStream bsO = new DataOutputStream(bS.getOutputStream());
+            DataInputStream bsI = new DataInputStream(bS.getInputStream());
+            bsO.writeInt(1);//Code upload
+            bsO.flush();
+
+            bsI.readInt();
+            Log.d("sendButton.onClick", "sent condition code 1");
+            bsO.writeUTF(text);
+            bsO.flush();
+
+            bS.close();
+        }catch(Exception e){
+            Log.e("sendBUtton.onclick",e.toString());
+            return false;
+        }
+        return true;
+    }
+
+    public boolean receiveEntry(){
+
+        BluetoothSocket bS = null;
+        try{
+            bS = getSockToServer();
+            Log.d("sendButton.onClick","found a sock! ");
+            bS.connect();
+        }catch(Exception e){
+            Log.e("sendButton.onClick","trying fallback");
+            try{
+                bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
+                bS.connect();
+            }catch(Exception ioE){
+                Log.e("sendButton.onClick{SNC}",e.toString());
+                return false;
+            }
+        }
+        if(bS==null){return false;}
+        try {
+            DataInputStream bsI = new DataInputStream(bS.getInputStream());
+            DataOutputStream bsO = new DataOutputStream(bS.getOutputStream());
+            bsO.writeInt(2);//Code download
+            bsO.flush();
+
+            boolean serverStillHasData = true;
+            int count = 0;
+            int response = 2;
+
+            while (serverStillHasData) {
+                Log.d("refresh", "reading entry " + count);
+                //check if data is a clone
+                try {
+                    JSONObject teamEntry = new JSONObject(bsI.readUTF());
+                    if (isDataInSet(teamEntry) != null) {
+                        Log.d("refresh", "entry " + count + " is the same as anoter entry, removing...");
+
+                    }else {
+                        Log.d("refresh", "entry " + count + " is new!");
+                        appendToTeamData(teamEntry);
+                    }
+                } catch (JSONException e) {
+                    bsO.writeInt(1);
+                    bsO.close();
+                    Log.e("refresh: ", "error", e);
+                    bS.close();
+                    return true;
+                }
+                try{
+                    bsO.writeInt(2);
+                    bsO.flush();
+                    count++;
+                    response = bsI.readInt();
+                }catch(IOException e){};
+                Log.d("refresh","server response:"+response);
+
+                if (response==2){
+                    Log.d("refresh", "Continuing on to " + count);
+                    serverStillHasData = true;
+                }else if(response==1){
+                    Log.d("refresh", "Possible finish up at entry " + (count-1));
+                    serverStillHasData = true;
+                }else if(response==0){
+                    Log.d("refresh", "Finishing up at entry " + (count-1)+"...");
+                    serverStillHasData = false;
+                }
+            }
+
+            bS.close();
+            Log.d("refresh", "Finished up at entry " + (count-1));
+        } catch (IOException e) {
+            Log.e("sendButton.onClick", e.toString());
+            try {
+                bS.close();
+                return false;
+            } catch (IOException ioE) {
+                Log.e("sendButton.onClick{SNC}", e.toString());
+                return false;
+            }
+        }
+        return true;
+    }
     public String gatherData(){
         // Probably not the best way to go about this.
         ViewGroup root = (ViewGroup) findViewById(R.id.mainContainer);
@@ -435,9 +453,7 @@ public class MainActivity extends AppCompatActivity {
     public BluetoothAdapter getEnabledBlueOrExit(View snackAttach,boolean fail){
         BluetoothAdapter blu = BluetoothAdapter.getDefaultAdapter();
         if(blu==null||fail){
-            final String snackBarExitText = "No Bluetooth Adapter detected. App is now exiting";
-            final Snackbar exitNoBlu = Snackbar.make(snackAttach,snackBarExitText,Snackbar.LENGTH_INDEFINITE);
-            exitNoBlu.show();
+            dispSnack(snackAttach,"No bluetooth stack found, exiting...",Snackbar.LENGTH_INDEFINITE);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable(){
                 public void run(){
@@ -493,6 +509,11 @@ public class MainActivity extends AppCompatActivity {
             Log.e("getSockToServer","Could not create a socket with '"+deviceName+"'");
             return null;
         }
+    }
+    public void dispSnack(View snackAttach, String text, int len){
+        final Snackbar snackbar = Snackbar.make(snackAttach,text,len);
+        snackbar.show();
+
     }
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
