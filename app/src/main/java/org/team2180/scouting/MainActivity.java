@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     public JSONObject teamData = new JSONObject();
     static long countDown = 3;
     public final int REQUEST_ENABLE_BT = 910;
-    public final String deviceName = "max-pc";
+    public final String deviceName = "2180-3";
     public final UUID serviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ed" +
             "");
     public ArrayAdapter<CharSequence> reportArrayAdapter;

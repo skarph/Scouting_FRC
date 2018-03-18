@@ -5,4 +5,40 @@
     <item>2180</item>
     <item>391</item>
     <item>9999999999</item>
-</string-array></resources>
+        
+    </string-array>
+    <string-array name="Questions_TELE">
+        <item>Power-Up Cubes can be handled by Robot?</item>
+        <item>Short Switch can have cubes placed in it by Robot?</item>
+        <item>Tall Scale can have cubes placed in it by Robot?</item>
+        <item>Cubes on the Floor can be manipulated by Robot?</item>
+        <item>Cubes can be loaded onto the robot via the Players' Chutes?</item>
+        <item>Number of Cubes loaded via the Players' Chutes:</item>
+        <item>Maximum Cubes Robot is able to handle at once:</item>
+        <item>Cubes Robot can place on Tall Scale during Teleop:</item>
+        <item>Successful Attempts to place Cubes onto Scale during Teleop:</item>
+        <item>Unsucessful Attempts to place Cubes onto Scale during Teleop:</item>
+        <item>Cubes Robot can place on Small Switch during Teleop:</item>
+        <item>Sucessful Attempts to place Cubes onto Switch during Teleop:</item>
+        <item>Unsucessful Attempts to place Cubes onto Switch during Teleop:</item>
+        <item>[ENDGAME] Robot is able to climb Tall Scale?</item>
+        <item>[ENDGAME] Climbed the Tall Scale using a Bar?</item>
+    </string-array>
+    <string-array name="Questions_AUTO">
+        <item>Does the team have an autonomous period?</item>
+        <item>Does autonomous cross the Base Line?</item>
+        <item>Cubes Robot can place on Tall Scale:</item>
+        <item>Sucessful Attempts to place Cubes onto Scale:</item>
+        <item>Unsucessful Attempts to place Cubes onto Scale:</item>
+        <item>Cubes Robot can place on Small Switch:</item>
+        <item>Sucessful Attempts to place Cubes onto Switch:</item>
+        <item>Unsucessful Attempts to place Cubes onto Switch:</item>
+    </string-array>
+    <string-array name="Questions_MISC">
+        <item>Robot was disabled during match?</item>
+        <item>Did the robot have ramps?</item>
+        <item>Did the robot use ramps?</item>
+        <item>Did the robot park correctly?</item>
+        <item>Can this robot carry other robots?</item>
+    </string-array>
+</resources>
