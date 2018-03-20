@@ -42,12 +42,14 @@ public class MainActivity extends AppCompatActivity {
     public JSONObject teamData = new JSONObject();
     static long countDown = 3;
     public final int REQUEST_ENABLE_BT = 910;
-    public final String deviceName = "2180-3";
+    public final String deviceName = "max-pc";
     public final UUID serviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ed" +
             "");
     public ArrayAdapter<CharSequence> reportArrayAdapter;
+    public ArrayAdapter<CharSequence> selectorArrayAdapter;
+    ArrayAdapter<CharSequence> selectorAdapter;
     BluetoothDevice bluetoothDevice;
-
+    public boolean hasReceivedTeams = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,24 +60,15 @@ public class MainActivity extends AppCompatActivity {
 
         //Spinners
         final Spinner teamSelector = (Spinner) findViewById(R.id.teamID);
-        final ArrayAdapter<CharSequence> selectorAdapter = ArrayAdapter.createFromResource(this, R.array.team_numbers, android.R.layout.simple_spinner_item);
+        selectorAdapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item,new ArrayList<CharSequence>());
+        selectorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         teamSelector.setAdapter(selectorAdapter);
+
         final Spinner reportSelector = (Spinner) findViewById(R.id.viewTeamID);
         reportArrayAdapter = new ArrayAdapter<CharSequence>(
                 this, android.R.layout.simple_spinner_dropdown_item, new ArrayList<CharSequence>());
         reportArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         reportSelector.setAdapter(reportArrayAdapter);
-
-        //SeekBars
-        final SeekBar autoSwi = (SeekBar) findViewById(R.id.autoSwi);
-        final SeekBar autoBal = (SeekBar) findViewById(R.id.autoBal);
-        final SeekBar teleopCubeCount = (SeekBar) findViewById(R.id.teleopCubeCount);
-
-        //Text Views
-        final TextView txtAutoSwi = (TextView) findViewById(R.id.autoSwiTxt);
-        final TextView txtAutoBal = (TextView) findViewById(R.id.autoBalTxt);
-        final TextView txtTeleopCubeCount = (TextView) findViewById(R.id.teleopCubeCountTxt);
-
         //FABs
         final FloatingActionButton sendButton = (FloatingActionButton) findViewById(R.id.sendData);
         final FloatingActionButton swapButton = (FloatingActionButton) findViewById(R.id.switchMode);
@@ -88,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         //--END INITIALIZATION--\\
 
         // Anonymous listener for the action buttons, doesn't deserve it's own class (yet)
+
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -104,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d("refresh", "adding new local data to entries!");
                             dispSnack(swapButton,"New information sent!",Snackbar.LENGTH_SHORT);
                         } else if (!didSend) {
-                            dispSnack(swapButton,"A bad error occured when uploading! Please restart your app and inform the developer",Snackbar.LENGTH_LONG);
+                            dispSnack(swapButton,"A bad error occured when uploading! Please retry!",Snackbar.LENGTH_LONG);
                             Log.d("refresh", "failed to send entry!");
                         }
 
@@ -177,15 +171,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //--END TEAM/REPORT SELECTOR--\\
-
         // These listeners got extremely repetitive, so now they have their own class.
-        // See org.team2180.scouting.listeners.DiscreteBarUpdater for more
-        autoSwi.setOnSeekBarChangeListener(new DiscreteBarUpdater(autoSwi, txtAutoSwi));
-        autoBal.setOnSeekBarChangeListener(new DiscreteBarUpdater(autoBal, txtAutoBal));
-        teleopCubeCount.setOnSeekBarChangeListener(new DiscreteBarUpdater(teleopCubeCount, txtTeleopCubeCount));
-        txtAutoSwi.setText(txtAutoSwi.getText() + ": " + autoSwi.getProgress());
-        txtAutoBal.setText(txtAutoBal.getText() + ": " + autoBal.getProgress());
-        txtTeleopCubeCount.setText(txtTeleopCubeCount.getText() + ": " + teleopCubeCount.getProgress());
+        // See org.team2180.scouting.listeners.DiscreteBarUpdater for more;
+        assignAllDiscreteBars();
+        getTeamsFromServer(selectorAdapter);
     }
 
     //Auto-generated
@@ -208,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean sendEntry(String text){
+        getTeamsFromServer(selectorAdapter);
         BluetoothSocket bS = null;
         try{
             bS = getSockToServer();
@@ -246,19 +236,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean receiveEntry(){
+        getTeamsFromServer(selectorAdapter);
 
         BluetoothSocket bS = null;
         try{
             bS = getSockToServer();
-            Log.d("sendButton.onClick","found a sock! ");
+            Log.d("receive.onClick","found a sock! ");
             bS.connect();
         }catch(Exception e){
-            Log.e("sendButton.onClick","trying fallback");
+            Log.e("receive.onClick","trying fallback");
             try{
                 bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
                 bS.connect();
             }catch(Exception ioE){
-                Log.e("sendButton.onClick{SNC}",e.toString());
+                Log.e("receive.onClick{SNC}",e.toString());
                 return false;
             }
         }
@@ -315,12 +306,12 @@ public class MainActivity extends AppCompatActivity {
             bS.close();
             Log.d("refresh", "Finished up at entry " + (count-1));
         } catch (IOException e) {
-            Log.e("sendButton.onClick", e.toString());
+            Log.e("receive.onClick", e.toString());
             try {
                 bS.close();
                 return false;
             } catch (IOException ioE) {
-                Log.e("sendButton.onClick{SNC}", e.toString());
+                Log.e("receive.onClick{SNC}", e.toString());
                 return false;
             }
         }
@@ -384,12 +375,6 @@ public class MainActivity extends AppCompatActivity {
         compJSONobj = compJSONobj + "}";
         return compJSONobj;
     }
-    public Byte[] toEncrypted(){
-        //TODO: AES encryption of output from gatherData
-
-        Byte[] byteArr = {};
-        return byteArr;
-    }
 
     public void displayTeamInfo(String reportID){
         try {
@@ -432,8 +417,8 @@ public class MainActivity extends AppCompatActivity {
             reportArrayAdapter.add(obj.getString("teamID") + ": Report " + i);
         } catch (JSONException e) {
             Log.e("Exception", e.toString());
-        }
     }
+}
 
     @Override
     public void onActivityResult (int requestCode, int resultCode, Intent data){
@@ -510,6 +495,82 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     }
+    public boolean getTeamsFromServer(ArrayAdapter<CharSequence> teamNumList){
+        if(hasReceivedTeams){return false;}
+        Log.d("recTeams.onClick","getting teams... ");
+        BluetoothSocket bS = null;
+        dispSnack(findViewById(R.id.switchMode),"Getting team numbers...",Snackbar.LENGTH_SHORT);
+        try{
+            bS = getSockToServer();
+            Log.d("recTeams.onClick","found a sock! ");
+            bS.connect();
+        }catch(Exception e){
+            Log.e("recTeams.onClick","trying fallback");
+            try{
+                bS = (BluetoothSocket) bS.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(bS,1);
+                bS.connect();
+            }catch(Exception ioE){
+                Log.e("recTeams.onClick{SNC}",e.toString());
+                return false;
+            }
+        }
+        if(bS==null){return false;}
+
+        try {
+            DataInputStream bsI = new DataInputStream(bS.getInputStream());
+            DataOutputStream bsO = new DataOutputStream(bS.getOutputStream());
+            bsO.writeInt(3);//Code team query
+            bsO.flush();
+
+            boolean serverStillHasData = true;
+            int count = 0;
+            int response = 2;
+
+            while (serverStillHasData) {
+                Log.d("recTeams", "reading entry " + count);
+                //check if data is a clone
+                try {
+                    CharSequence teamNumber = (String)bsI.readUTF();
+                    Log.d("recTeams",(String)teamNumber);
+                    teamNumList.add(teamNumber);
+                    Log.d("recTeams","sending ok!");
+                    bsO.writeInt(2);
+                    bsO.flush();
+                    count++;
+                    response = bsI.readInt();
+                }catch(Exception e){
+                    Log.e("recTeams","Couldn't get the team number because:",e);
+                    bsO.writeInt(1);
+                    bS.close();
+                    return false;
+                };//shh...
+                Log.d("recTeams","server response:"+response);
+
+                if (response==2){
+                    Log.d("recTeams", "Continuing on to " + count);
+                    serverStillHasData = true;
+                }else if(response==0){
+                    Log.d("recTeams", "Finishing up at entry " + (count-1)+"...");
+                    serverStillHasData = false;
+                }
+                count++;
+            }
+
+            bS.close();
+            Log.d("refresh", "Finished up at entry " + (count-1));
+        } catch (IOException e) {
+            Log.e("recTeams.onClick", e.toString());
+            try {
+                bS.close();
+                return false;
+            } catch (IOException ioE) {
+                Log.e("recTeams.onClick{SNC}", e.toString());
+                return false;
+            }
+        }
+        hasReceivedTeams = true;
+        return true;
+    }
     public void dispSnack(View snackAttach, String text, int len){
         final Snackbar snackbar = Snackbar.make(snackAttach,text,len);
         snackbar.show();
@@ -531,4 +592,17 @@ public class MainActivity extends AppCompatActivity {
             BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
         }
     };
+    public void assignAllDiscreteBars(){
+        int childTotal = ((ViewGroup)findViewById(R.id.mainContainer)).getChildCount();
+        for(int i = 0; i<childTotal; i++){
+            View child = ((ViewGroup)findViewById(R.id.mainContainer)).getChildAt(i);
+            if(child instanceof SeekBar){
+                Log.d("assignAll","Attempting for id:"+getResources().getResourceName(child.getId()));
+                ((SeekBar) child).setOnSeekBarChangeListener(new DiscreteBarUpdater(
+                        (SeekBar) child,
+                        (TextView) findViewById(getResources().getIdentifier(child.getResources().getResourceName(child.getId())+"Txt","id",this.getPackageName()))));
+                Log.d("assignAll","Is paired:"+getResources().getResourceName(child.getId()));
+            }
+        }
+    }
 }

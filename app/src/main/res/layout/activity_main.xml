@@ -50,12 +50,12 @@
 
             <TextView
                 android:id="@+id/teleopHead"
-                android:textColor="#e53"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:text="Teleoperated Period"
-                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#e53" />
 
             <CheckBox
                 android:id="@+id/teleopCubes"
@@ -101,13 +101,99 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:max="10"
-                android:progress="3" />
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/teleopScaleSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Successful attempts to place Cubes onto Scale during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/teleopScaleSucc"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/teleopScaleUnSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Unsuccessful attempts to place Cubes onto Scale during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/teleopScaleUnSucc"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/teleopCubeChuteTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes loaded onto the robot via the Player's Chutes"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/teleopCubeChute"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/teleopSwiSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Successful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/teleopSwiSucc"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/teleopSwiUnSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Unsuccessful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/teleopSwiUnSucc"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
 
             <CheckBox
                 android:id="@+id/teleopClimb"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Robot is able to Climb Tall Balance during Endgame" />
+                android:text="[ENDGAME] Robot is able to Climb Tall Balance" />
+
+            <CheckBox
+                android:id="@+id/teleopRoboClimb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[ENDGAME] Robot is able to Climb Other Robots" />
 
             <Space
                 android:layout_width="match_parent"
@@ -117,11 +203,11 @@
                 android:id="@+id/autoHead"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#53e"
                 android:ems="10"
                 android:inputType="textPersonName"
                 android:text="Autonomous Period"
-                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#53e" />
 
             <CheckBox
                 android:id="@+id/autoCan"
@@ -135,51 +221,117 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Does autonomous cross the Auto Line?" />
+                android:text="Does autonomous cross the Base UnsLine?" />
 
             <TextView
-                android:id="@+id/autoBalTxt"
+                android:id="@+id/autoScaleSuccTxt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cubes robot can place on Big Balance"
+                android:text="Successful attempts to place Cubes onto Scale during Teleop"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
 
             <SeekBar
-                android:id="@+id/autoBal"
+                android:id="@+id/autoScaleSucc"
                 style="@style/Widget.AppCompat.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:max="10"
-                android:progress="3" />
+                android:progress="0" />
 
             <TextView
-                android:id="@+id/autoSwiTxt"
+                android:id="@+id/autoScaleUnSuccTxt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cubes robot can place on small switch"
+                android:text="Unsuccessful attempts to place Cubes onto Scale during Teleop"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
 
             <SeekBar
-                android:id="@+id/autoSwi"
+                android:id="@+id/autoScaleUnSucc"
                 style="@style/Widget.AppCompat.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:max="10"
-                android:progress="3" />
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/autoSwiSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Successful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/autoSwiSucc"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
+
+            <TextView
+                android:id="@+id/autoSwiUnSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Unsuccessful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <SeekBar
+                android:id="@+id/autoSwiUnSucc"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="10"
+                android:progress="0" />
 
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
 
+            <TextView
+                android:id="@+id/miscHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text="Miscellaneous"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#3e5" />
+
+            <CheckBox
+                android:id="@+id/miscDisabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot disabled" />
+
+            <CheckBox
+                android:id="@+id/miscHadRamps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot had Ramps" />
+
+            <CheckBox
+                android:id="@+id/miscUsedRamps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="RobotUsedRamps" />
+
+            <CheckBox
+                android:id="@+id/miscAwesome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot can Carry other robots" />
+
             <EditText
                 android:id="@+id/comments"
                 style="@style/Widget.AppCompat.EditText"
-                android:textColorHint="#284"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Write any Notes or Comments about the Team?" />
+                android:hint="Write any Notes or Comments about the Team?"
+                android:textColorHint="#284" />
 
             <Space
                 android:layout_width="match_parent"
@@ -279,7 +431,42 @@
                 android:text="Cubes can be loaded onto the robot via the Players' chutes" />
 
             <TextView
-                android:id="@+id/viewTeleopCubeCount"
+                android:id="@+id/viewTeleopSwiUnSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Unsuccessful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewTeleopScaleSwiSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Successful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewTeleopCubeChuteTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cubes loaded onto the robot via the Player's Chutes"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewTeleopScaleUnSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Unsuccessful attempts to place Cubes onto Scale during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewTeleopScaleSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Successful attempts to place Cubes onto Scale during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewTeleopCubeCountTxt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Maximmum Cubes robot is able to handle at once"
@@ -289,8 +476,13 @@
                 android:id="@+id/viewTeleopClimb"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="false"
-                android:text="Robot is able to Climb Tall Balance during Endgame" />
+                android:text="[ENDGAME] Robot is able to Climb Tall Balance" />
+
+            <CheckBox
+                android:id="@+id/viewTeleopRoboClimb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[ENDGAME] Robot is able to Climb Other Robots" />
 
             <Space
                 android:layout_width="match_parent"
@@ -322,22 +514,70 @@
                 android:text="Does autonomous cross the Auto Line?" />
 
             <TextView
-                android:id="@+id/viewAutoBal"
+                android:id="@+id/viewAutoScaleSuccTxt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cubes robot can place on Big Balance"
+                android:text="Successful attempts to place Cubes onto Scale during Teleop"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
 
             <TextView
-                android:id="@+id/viewAutoSwi"
+                android:id="@+id/viewAutoScaleUnSuccTxt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cubes robot can place on small switch"
+                android:text="Unsuccessful attempts to place Cubes onto Scale during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewAutoSwiSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Successful attempts to place Cubes onto Switch during Teleop"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
+
+            <TextView
+                android:id="@+id/viewAutoSwiUnSuccTxt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Unsuccessful attempts to place Cubes onto Switch during Teleop"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
 
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
+
+            <TextView
+                android:id="@+id/viewMiscHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text="Miscellaneous"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#3e5" />
+
+            <CheckBox
+                android:id="@+id/viewMiscDisabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot disabled" />
+
+            <CheckBox
+                android:id="@+id/viewMiscHadRamps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot had Ramps" />
+
+            <CheckBox
+                android:id="@+id/viewMiscUsedRamps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="RobotUsedRamps" />
+
+            <CheckBox
+                android:id="@+id/viewMiscAwesome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Robot can Carry other robots" />
 
             <TextView
                 android:id="@+id/viewCommentDescriptor"
