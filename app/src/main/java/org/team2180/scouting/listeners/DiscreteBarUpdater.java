@@ -16,6 +16,7 @@ public class DiscreteBarUpdater implements SeekBar.OnSeekBarChangeListener {
         this.seekbar = seekbar;
         this.targetTextView = targetTextView;
         this.originalText = targetTextView.getText().toString();
+        this.targetTextView.setText(this.originalText + ": " + seekbar.getProgress());
     }
     @Override
     public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
